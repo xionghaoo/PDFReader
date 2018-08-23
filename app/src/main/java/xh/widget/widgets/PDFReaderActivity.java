@@ -33,6 +33,7 @@ public class PDFReaderActivity extends AppCompatActivity {
     int downloadedSize = 0, totalsize;
     String download_file_url = "http://unec.edu.az/application/uploads/2014/12/pdf-sample.pdf";
     String pdf2 = "http://www.ets.org/Media/Tests/GRE/pdf/gre_research_validity_data.pdf";
+    String pdf3 = "http://jz-public-prd.oss-cn-shenzhen.aliyuncs.com/others/protocol/%E8%9E%8D%E8%B5%84%E6%9C%8D%E5%8A%A1%E5%8D%8F%E8%AE%AE_%E6%9C%89%E6%8B%85%E4%BF%9D.pdf";
     float per = 0;
     
     @Override
@@ -47,7 +48,7 @@ public class PDFReaderActivity extends AppCompatActivity {
         progressBar.setProgress(0);
 
         edtURL = findViewById(R.id.url);
-        edtURL.setText(pdf2);
+        edtURL.setText(pdf3);
 
         Button btnOpen = findViewById(R.id.open);
         btnOpen.setOnClickListener(new View.OnClickListener() {
@@ -72,15 +73,29 @@ public class PDFReaderActivity extends AppCompatActivity {
                         .openConnection();
 
                 urlConnection.setRequestMethod("GET");
-                urlConnection.setDoOutput(true);
-
-                // connect
+                urlConnection.setDoOutput(false);
+                urlConnection.setConnectTimeout(10 * 1000);
+                urlConnection.setReadTimeout(10 * 1000);
+                urlConnection.setRequestProperty("Connection", "Keep-Alive");
+                urlConnection.setRequestProperty("Charset", "UTF-8");
+//                urlConnection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+//                urlConnection.setRequestProperty("Referer", "https://www.jinzhucaifu.com/");
+                Log.d(TAG, "open connect");
                 urlConnection.connect();
+                long bytetotal = urlConnection.getContentLength();
+                Log.d(TAG, "content: "+bytetotal);
 
                 // set the path where we want to save the file
                 File SDCardRoot = Environment.getExternalStorageDirectory();
                 // create a new file, to save the downloaded file
-                file = new File(PDFReaderActivity.this.getFilesDir(), dest_file_path);
+                file = new File(PDFReaderActivity.this.getCacheDir(), dest_file_path);
+
+                if (!file.exists()) {
+                    file.mkdir();
+                }
+
+                Log.d(TAG, "file: " + file);
+
 
                 FileOutputStream fileOutput = new FileOutputStream(file);
 
@@ -101,24 +116,24 @@ public class PDFReaderActivity extends AppCompatActivity {
                     downloadedSize += bufferLength;
                     per = ((float) downloadedSize / totalsize) * 100;
 
-                    onProgressUpdate((int) per);
+                    publishProgress((int) per);
 
-                    Log.d(TAG, "Total PDF File size  : "
-                            + (totalsize / 1024)
-                            + " KB\n\nDownloading PDF " + (int) per
-                            + "% complete");
+//                    Log.d(TAG, "Total PDF File size  : "
+//                            + (totalsize / 1024)
+//                            + " KB\n\nDownloading PDF " + (int) per
+//                            + "% complete");
                 }
                 // close the output stream when complete //
                 fileOutput.close();
                 Log.d(TAG, "Download Complete. Open PDF Application installed in the device.");
 
             } catch (final MalformedURLException e) {
-                Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
+                Log.e(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
             } catch (final IOException e) {
-                Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
+                Log.e(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
 
             } catch (final Exception e) {
-                Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
+                Log.e(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
             }
             return file;
         }
@@ -164,63 +179,4 @@ public class PDFReaderActivity extends AppCompatActivity {
         }
     }
 
-    File downloadFile(String dwnload_file_path) {
-        File file = null;
-        try {
-
-            URL url = new URL(dwnload_file_path);
-            HttpURLConnection urlConnection = (HttpURLConnection) url
-                    .openConnection();
-
-            urlConnection.setRequestMethod("GET");
-            urlConnection.setDoOutput(true);
-
-            // connect
-            urlConnection.connect();
-
-            // set the path where we want to save the file
-            File SDCardRoot = Environment.getExternalStorageDirectory();
-            // create a new file, to save the downloaded file
-            file = new File(SDCardRoot, dest_file_path);
-
-            FileOutputStream fileOutput = new FileOutputStream(file);
-
-            // Stream used for reading the data from the internet
-            InputStream inputStream = urlConnection.getInputStream();
-
-            // this is the total size of the file which we are
-            // downloading
-            totalsize = urlConnection.getContentLength();
-            Log.d(TAG, "Starting PDF download...");
-
-            // create a buffer...
-            byte[] buffer = new byte[1024 * 1024];
-            int bufferLength = 0;
-
-            while ((bufferLength = inputStream.read(buffer)) > 0) {
-                fileOutput.write(buffer, 0, bufferLength);
-                downloadedSize += bufferLength;
-                per = ((float) downloadedSize / totalsize) * 100;
-
-
-
-                Log.d(TAG, "Total PDF File size  : "
-                        + (totalsize / 1024)
-                        + " KB\n\nDownloading PDF " + (int) per
-                        + "% complete");
-            }
-            // close the output stream when complete //
-            fileOutput.close();
-            Log.d(TAG, "Download Complete. Open PDF Application installed in the device.");
-
-        } catch (final MalformedURLException e) {
-            Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
-        } catch (final IOException e) {
-            Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
-
-        } catch (final Exception e) {
-            Log.d(TAG, "Some error occured. Press back and try again.: " + e.getLocalizedMessage());
-        }
-        return file;
-    }
 }
