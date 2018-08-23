@@ -88,7 +88,7 @@ public class PDFReaderActivity extends AppCompatActivity {
                 // set the path where we want to save the file
                 File SDCardRoot = Environment.getExternalStorageDirectory();
                 // create a new file, to save the downloaded file
-                file = new File(PDFReaderActivity.this.getCacheDir(), dest_file_path);
+                file = new File(PDFReaderActivity.this.getFilesDir(), dest_file_path);
 
                 if (!file.exists()) {
                     file.mkdir();
